@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LED Sound Controller</title>
+
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+<style>
+body {
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  font-family: Arial, sans-serif;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.card {
+  background: #111;
+  padding: 25px;
+  width: 320px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.7);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+label {
+  margin-top: 12px;
+  display: block;
+}
+
+select, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: none;
+  font-size: 15px;
+}
+
+button {
+  margin-top: 18px;
+  background: #00e676;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #00c853;
+}
+
+.note {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 10px;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Sound Reactive LED</h2>
+
+  <label>Mode</label>
+  <select id="mode" onchange="updateColors()">
+    <option value="0">Breathing</option>
+    <option value="1">Spectrum</option>
+    <option value="2">Volume Bar</option>
+    <option value="3">Square Spectrum</option>
+  </select>
+
+  <label>Color Theme</label>
+  <select id="color"></select>
+
+  <button onclick="send()">Send to Device</button>
+
+  <div class="note">
+    Breathing mode supports extra color themes
+  </div>
+</div>
+
+<script>
+const client = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
+
+client.on("connect", () => {
+  console.log("MQTT connected");
+});
+
+const commonColors = [
+  {name:"Ocean", value:0},
+  {name:"Forest", value:1},
+  {name:"Twilight", value:2},
+  {name:"Halloween", value:3},
+  {name:"Ember", value:4},
+  {name:"Neon", value:5}
+];
+
+const breathingOnly = [
+  {name:"Pastel", value:6},
+  {name:"Rainbow", value:7},
+  {name:"Cosmic", value:8}
+];
+
+function updateColors() {
+  const mode = document.getElementById("mode").value;
+  const colorSelect = document.getElementById("color");
+  colorSelect.innerHTML = "";
+
+  commonColors.forEach(c => {
+    colorSelect.add(new Option(c.name, c.value));
+  });
+
+  if (mode == "0") {
+    breathingOnly.forEach(c => {
+      colorSelect.add(new Option(c.name, c.value));
+    });
+  }
+}
+
+function send() {
+  const mode = document.getElementById("mode").value;
+  const color = document.getElementById("color").value;
+  const message = mode + "," + color;
+
+  client.publish("led/control", message);
+  alert("Sent: " + message);
+}
+
+updateColors();
+</script>
+
+</body>
+</html>
