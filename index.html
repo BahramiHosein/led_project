@@ -7,9 +7,13 @@
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
 <style>
+:root {
+  --accent: #00e676;
+}
+
 body {
   background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-  font-family: Arial, sans-serif;
+  font-family: system-ui, sans-serif;
   color: white;
   display: flex;
   justify-content: center;
@@ -18,47 +22,106 @@ body {
 }
 
 .card {
-  background: #111;
-  padding: 25px;
+  background: #0e0e0e;
+  padding: 22px;
   width: 320px;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.7);
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.7);
 }
 
 h2 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
+  font-weight: 600;
 }
 
 label {
-  margin-top: 12px;
+  margin-top: 14px;
   display: block;
+  font-size: 14px;
+  opacity: 0.85;
 }
 
-select, button {
+select {
   width: 100%;
   padding: 10px;
   margin-top: 6px;
-  border-radius: 6px;
+  border-radius: 8px;
   border: none;
   font-size: 15px;
+  background: #1a1a1a;
+  color: white;
 }
 
 button {
-  margin-top: 18px;
-  background: #00e676;
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  font-size: 15px;
+  background: var(--accent);
   font-weight: bold;
   cursor: pointer;
 }
 
 button:hover {
-  background: #00c853;
+  filter: brightness(0.9);
+}
+
+/* ---------- Theme Grid ---------- */
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.theme {
+  background: #161616;
+  border-radius: 12px;
+  padding: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: 0.2s;
+}
+
+.theme:hover {
+  transform: scale(1.03);
+}
+
+.theme.selected {
+  border-color: var(--accent);
+}
+
+.theme.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.palette {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.color {
+  height: 14px;
+  border-radius: 4px;
+}
+
+.theme-name {
+  margin-top: 6px;
+  font-size: 12px;
+  text-align: center;
+  opacity: 0.8;
 }
 
 .note {
   font-size: 12px;
-  opacity: 0.7;
-  margin-top: 10px;
+  opacity: 0.6;
+  margin-top: 12px;
   text-align: center;
 }
 </style>
@@ -70,7 +133,7 @@ button:hover {
   <h2>Sound Reactive LED</h2>
 
   <label>Mode</label>
-  <select id="mode" onchange="updateColors()">
+  <select id="mode" onchange="updateThemes()">
     <option value="0">Breathing</option>
     <option value="1">Spectrum</option>
     <option value="2">Volume Bar</option>
@@ -78,63 +141,92 @@ button:hover {
   </select>
 
   <label>Color Theme</label>
-  <select id="color"></select>
+  <div id="themes" class="theme-grid"></div>
 
   <button onclick="send()">Send to Device</button>
 
   <div class="note">
-    Breathing mode supports extra color themes
+    Breathing mode supports extra themes
   </div>
 </div>
 
 <script>
+/* ---------- MQTT ---------- */
+
 const client = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
 
 client.on("connect", () => {
   console.log("MQTT connected");
 });
 
-const commonColors = [
-  {name:"Ocean", value:0},
-  {name:"Forest", value:1},
-  {name:"Twilight", value:2},
-  {name:"Halloween", value:3},
-  {name:"Ember", value:4},
-  {name:"Neon", value:5}
+/* ---------- THEMES ---------- */
+
+const themes = [
+  { id:0, name:"Ocean", colors:["#0a3d62","#1e90ff","#48dbfb","#c8d6e5"], breathing:true },
+  { id:1, name:"Forest", colors:["#145a32","#2ecc71","#a3cb38","#dff9fb"], breathing:true },
+  { id:2, name:"Twilight", colors:["#2c2c54","#40407a","#706fd3","#f7f1e3"], breathing:true },
+  { id:3, name:"Halloween", colors:["#ff6f00","#ff9100","#6d214f","#000000"], breathing:true },
+  { id:4, name:"Ember", colors:["#ff3f34","#ff793f","#cd6133","#2c2c2c"], breathing:true },
+  { id:5, name:"Neon", colors:["#00fff0","#ff00ff","#ffe600","#00ff00"], breathing:true },
+
+  { id:6, name:"Pastel", colors:["#ffd1dc","#c1f0f6","#fce1a8","#dcd6f7"], breathing:false },
+  { id:7, name:"Rainbow", colors:["#ff0000","#ffa500","#ffff00","#00ff00"], breathing:false },
+  { id:8, name:"Cosmic", colors:["#0f0c29","#302b63","#24243e","#8e44ad"], breathing:false }
 ];
 
-const breathingOnly = [
-  {name:"Pastel", value:6},
-  {name:"Rainbow", value:7},
-  {name:"Cosmic", value:8}
-];
+let selectedTheme = 0;
 
-function updateColors() {
+/* ---------- UI LOGIC ---------- */
+
+function updateThemes() {
   const mode = document.getElementById("mode").value;
-  const colorSelect = document.getElementById("color");
-  colorSelect.innerHTML = "";
+  const container = document.getElementById("themes");
+  container.innerHTML = "";
 
-  commonColors.forEach(c => {
-    colorSelect.add(new Option(c.name, c.value));
-  });
+  themes.forEach(t => {
+    const disabled = (mode !== "0" && !t.breathing);
 
-  if (mode == "0") {
-    breathingOnly.forEach(c => {
-      colorSelect.add(new Option(c.name, c.value));
+    const el = document.createElement("div");
+    el.className = "theme" + (disabled ? " disabled" : "");
+    if (t.id === selectedTheme) el.classList.add("selected");
+
+    el.onclick = () => {
+      selectedTheme = t.id;
+      updateThemes();
+    };
+
+    const palette = document.createElement("div");
+    palette.className = "palette";
+
+    t.colors.forEach(c => {
+      const dot = document.createElement("div");
+      dot.className = "color";
+      dot.style.background = c;
+      palette.appendChild(dot);
     });
-  }
+
+    el.appendChild(palette);
+
+    const name = document.createElement("div");
+    name.className = "theme-name";
+    name.textContent = t.name;
+    el.appendChild(name);
+
+    container.appendChild(el);
+  });
 }
+
+/* ---------- SEND ---------- */
 
 function send() {
   const mode = document.getElementById("mode").value;
-  const color = document.getElementById("color").value;
-  const message = mode + "," + color;
+  const message = mode + "," + selectedTheme;
 
   client.publish("led/control", message);
   alert("Sent: " + message);
 }
 
-updateColors();
+updateThemes();
 </script>
 
 </body>
