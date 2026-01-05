@@ -204,16 +204,15 @@ client.on("connect", () => console.log("MQTT connected"));
 /* ---------- THEMES ---------- */
 
 const themes = [
-  { id:0, name:"Ocean", colors:["#0a3d62","#1e90ff","#48dbfb","#c8d6e5"], breathing:true },
-  { id:1, name:"Forest", colors:["#145a32","#2ecc71","#a3cb38","#dff9fb"], breathing:true },
-  { id:2, name:"Twilight", colors:["#2c2c54","#40407a","#706fd3","#f7f1e3"], breathing:true },
-  { id:3, name:"Halloween", colors:["#ff6f00","#ff9100","#6d214f","#000"], breathing:true },
-  { id:4, name:"Ember", colors:["#ff3f34","#ff793f","#cd6133","#2c2c2c"], breathing:true },
-  { id:5, name:"Neon", colors:["#00fff0","#ff00ff","#ffe600","#00ff00"], breathing:true },
-
-  { id:6, name:"Pastel", colors:["#ffd1dc","#c1f0f6","#fce1a8","#dcd6f7"], breathing:false },
-  { id:7, name:"Rainbow", colors:["#ff0000","#ffa500","#ffff00","#00ff00"], breathing:false },
-  { id:8, name:"Cosmic", colors:["#0f0c29","#302b63","#24243e","#8e44ad"], breathing:false }
+  { id:0, name:"Rainbow", colors:["#ff0000","#ffff00","#00ff00","#00ffff"], breathing:false },
+  { id:1, name:"Ember", colors:["#ff0000","#ff8000","#ffff00","#ffff80"], breathing:true },
+  { id:2, name:"Ocean", colors:["#0000ff","#007fff","#00ffff","#80ffff"], breathing:true },
+  { id:3, name:"Forest", colors:["#005000","#008000","#00b000","#00ff00"], breathing:true },
+  { id:4, name:"Pastel", colors:["#ff8080","#80ffff","#ffff80","#d0c0ff"], breathing:false },
+  { id:5, name:"Twilight", colors:["#aa00ff","#6644ff","#2c2c54","#f7f1e3"], breathing:true },
+  { id:6, name:"Halloween", colors:["#ff4000","#ff8000","#ffcc00","#330000"], breathing:true },
+  { id:7, name:"Neon", colors:["#00ff00","#00ffff","#ff00ff","#ffff00"], breathing:true },
+  { id:8, name:"Cosmic", colors:["#8000ff","#4000ff","#0000ff","#ff00ff"], breathing:false }
 ];
 
 let selectedTheme = 0;
