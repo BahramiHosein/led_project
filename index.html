@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>LED Sound Controller</title>
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -9,86 +10,100 @@
 <style>
 :root {
   --accent: #00e676;
+  --bg: #0b0b0b;
+  --panel: #121212;
 }
+
+/* ---------- BASE ---------- */
 
 body {
-  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-  font-family: system-ui, sans-serif;
+  margin: 0;
+  background: radial-gradient(circle at top, #1b3a4b, #050505);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   color: white;
+}
+
+/* ---------- APP CONTAINER ---------- */
+
+.app {
+  height: 100svh;
+  max-width: 480px;
+  max-height: 800px;
+  margin: auto;
+  background: var(--bg);
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  flex-direction: column;
 }
 
-.card {
-  background: #0e0e0e;
-  padding: 22px;
-  width: 320px;
-  border-radius: 14px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+/* Desktop centering */
+@media (min-width: 600px) {
+  body {
+    display: grid;
+    place-items: center;
+  }
+
+  .app {
+    border-radius: 24px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.7);
+    overflow: hidden;
+  }
 }
 
-h2 {
+/* ---------- HEADER ---------- */
+
+.header {
+  padding: 18px;
   text-align: center;
-  margin-bottom: 18px;
+  font-size: 18px;
   font-weight: 600;
+  background: linear-gradient(180deg, #0f2027, transparent);
+}
+
+/* ---------- CONTENT ---------- */
+
+.content {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 label {
-  margin-top: 14px;
   display: block;
-  font-size: 14px;
-  opacity: 0.85;
+  margin: 18px 0 6px;
+  font-size: 13px;
+  opacity: 0.7;
 }
 
 select {
   width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: 14px;
   border: none;
-  font-size: 15px;
-  background: #1a1a1a;
+  background: var(--panel);
   color: white;
+  font-size: 16px;
 }
 
-button {
-  width: 100%;
-  margin-top: 20px;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  font-size: 15px;
-  background: var(--accent);
-  font-weight: bold;
-  cursor: pointer;
-}
-
-button:hover {
-  filter: brightness(0.9);
-}
-
-/* ---------- Theme Grid ---------- */
+/* ---------- THEMES ---------- */
 
 .theme-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 12px;
   margin-top: 10px;
 }
 
 .theme {
-  background: #161616;
-  border-radius: 12px;
-  padding: 8px;
+  background: var(--panel);
+  border-radius: 18px;
+  padding: 10px;
   cursor: pointer;
   border: 2px solid transparent;
-  transition: 0.2s;
+  transition: transform 0.15s, border-color 0.15s;
 }
 
-.theme:hover {
-  transform: scale(1.03);
+.theme:active {
+  transform: scale(0.96);
 }
 
 .theme.selected {
@@ -96,57 +111,86 @@ button:hover {
 }
 
 .theme.disabled {
-  opacity: 0.3;
+  opacity: 0.35;
   pointer-events: none;
 }
 
 .palette {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  gap: 6px;
 }
 
 .color {
-  height: 14px;
-  border-radius: 4px;
+  height: 18px;
+  border-radius: 6px;
 }
 
 .theme-name {
-  margin-top: 6px;
-  font-size: 12px;
+  margin-top: 8px;
+  font-size: 13px;
   text-align: center;
   opacity: 0.8;
 }
 
+/* ---------- ACTION BAR ---------- */
+
+.footer {
+  padding: 14px;
+  background: linear-gradient(0deg, #000, transparent);
+}
+
+button {
+  width: 100%;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 18px;
+  border: none;
+  background: var(--accent);
+  color: black;
+  cursor: pointer;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
 .note {
-  font-size: 12px;
-  opacity: 0.6;
-  margin-top: 12px;
   text-align: center;
+  font-size: 12px;
+  opacity: 0.5;
+  margin-top: 8px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="card">
-  <h2>Sound Reactive LED</h2>
+<div class="app">
+  <div class="header">Sound Reactive LED</div>
 
-  <label>Mode</label>
-  <select id="mode" onchange="updateThemes()">
-    <option value="0">Breathing</option>
-    <option value="1">Spectrum</option>
-    <option value="2">Volume Bar</option>
-    <option value="3">Square Spectrum</option>
-  </select>
+  <div class="content">
 
-  <label>Color Theme</label>
-  <div id="themes" class="theme-grid"></div>
+    <label>Mode</label>
+    <select id="mode" onchange="updateThemes()">
+      <option value="0">Breathing</option>
+      <option value="1">Spectrum</option>
+      <option value="2">Volume Bar</option>
+      <option value="3">Square Spectrum</option>
+    </select>
 
-  <button onclick="send()">Send to Device</button>
+    <label>Color Theme</label>
+    <div id="themes" class="theme-grid"></div>
 
-  <div class="note">
-    Breathing mode supports extra themes
+    <div class="note">
+      Extra themes available in Breathing mode
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button onclick="send()">Send to Device</button>
   </div>
 </div>
 
@@ -155,9 +199,7 @@ button:hover {
 
 const client = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
 
-client.on("connect", () => {
-  console.log("MQTT connected");
-});
+client.on("connect", () => console.log("MQTT connected"));
 
 /* ---------- THEMES ---------- */
 
@@ -165,7 +207,7 @@ const themes = [
   { id:0, name:"Ocean", colors:["#0a3d62","#1e90ff","#48dbfb","#c8d6e5"], breathing:true },
   { id:1, name:"Forest", colors:["#145a32","#2ecc71","#a3cb38","#dff9fb"], breathing:true },
   { id:2, name:"Twilight", colors:["#2c2c54","#40407a","#706fd3","#f7f1e3"], breathing:true },
-  { id:3, name:"Halloween", colors:["#ff6f00","#ff9100","#6d214f","#000000"], breathing:true },
+  { id:3, name:"Halloween", colors:["#ff6f00","#ff9100","#6d214f","#000"], breathing:true },
   { id:4, name:"Ember", colors:["#ff3f34","#ff793f","#cd6133","#2c2c2c"], breathing:true },
   { id:5, name:"Neon", colors:["#00fff0","#ff00ff","#ffe600","#00ff00"], breathing:true },
 
@@ -176,7 +218,7 @@ const themes = [
 
 let selectedTheme = 0;
 
-/* ---------- UI LOGIC ---------- */
+/* ---------- UI ---------- */
 
 function updateThemes() {
   const mode = document.getElementById("mode").value;
@@ -220,14 +262,14 @@ function updateThemes() {
 
 function send() {
   const mode = document.getElementById("mode").value;
-  const message = mode + "," + selectedTheme;
-
-  client.publish("led/control", message);
-  alert("Sent: " + message);
+  const msg = mode + "," + selectedTheme;
+  client.publish("led/control", msg);
+  navigator.vibrate?.(20);
 }
 
 updateThemes();
 </script>
 
 </body>
-</html>
+        </html>
+        
