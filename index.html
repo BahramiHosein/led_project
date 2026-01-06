@@ -23,7 +23,6 @@ body {
   color: white;
 }
 
-/* ---------- APP CONTAINER ---------- */
 
 .app {
   height: 100svh;
@@ -35,7 +34,6 @@ body {
   flex-direction: column;
 }
 
-/* Desktop centering */
 @media (min-width: 600px) {
   body {
     display: grid;
@@ -49,8 +47,6 @@ body {
   }
 }
 
-/* ---------- HEADER ---------- */
-
 .header {
   padding: 18px;
   text-align: center;
@@ -59,7 +55,6 @@ body {
   background: linear-gradient(180deg, #0f2027, transparent);
 }
 
-/* ---------- CONTENT ---------- */
 
 .content {
   padding: 16px;
@@ -84,7 +79,6 @@ select {
   font-size: 16px;
 }
 
-/* ---------- THEMES ---------- */
 
 .theme-grid {
   display: grid;
@@ -133,7 +127,6 @@ select {
   opacity: 0.8;
 }
 
-/* ---------- ACTION BAR ---------- */
 
 .footer {
   padding: 14px;
@@ -195,13 +188,11 @@ button:active {
 </div>
 
 <script>
-/* ---------- MQTT ---------- */
 
 const client = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
 
 client.on("connect", () => console.log("MQTT connected"));
 
-/* ---------- THEMES ---------- */
 
 const themes = [
   { id:0, name:"Rainbow", colors:["#ff0000","#ffff00","#00ff00","#00ffff"], breathing:false },
@@ -217,7 +208,6 @@ const themes = [
 
 let selectedTheme = 0;
 
-/* ---------- UI ---------- */
 
 function updateThemes() {
   const mode = document.getElementById("mode").value;
@@ -257,7 +247,6 @@ function updateThemes() {
   });
 }
 
-/* ---------- SEND ---------- */
 
 function send() {
   const mode = document.getElementById("mode").value;
